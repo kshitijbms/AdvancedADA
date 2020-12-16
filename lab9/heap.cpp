@@ -1,0 +1,197 @@
+//Program to demonstrate BINOMIAL HEAP
+#include<bits/stdc++.h>
+using namespace std;
+struct Node 
+{ 
+	int data, degree; 
+    	Node *child, *sibling, *parent; 
+}; 
+Node* newNode(int data) 
+{ 
+    	Node *temp = new Node; 
+    	temp->data = data; 
+    	temp->degree = 0; 
+    	temp->child = temp->parent = temp->sibling = NULL; 
+    	return temp; 
+} 
+Node* mergetrees(Node *b1, Node *b2) 
+{ 
+	if (b1->data > b2->data) 
+        	swap(b1, b2); 
+    	b2->parent = b1; 
+    	b2->sibling = b1->child; 
+    	b1->child = b2; 
+    	b1->degree++; 
+      	return b1; 
+} 
+list<Node*> unionofheap(list<Node*> l1, list<Node*> l2) 
+{ 
+	list<Node*> _new; 
+    	list<Node*>::iterator it = l1.begin(); 
+    	list<Node*>::iterator ot = l2.begin(); 
+    	while (it!=l1.end() && ot!=l2.end()) 
+		{  
+        	if((*it)->degree <= (*ot)->degree) 
+			{ 
+            		_new.push_back(*it); 
+            		it++; 
+        	} 
+        	else 
+			{
+        		_new.push_back(*ot); 
+            		ot++; 
+        	} 
+    	} 
+    	while (it != l1.end()) 
+		{ 
+        	_new.push_back(*it); 
+        	it++; 
+    	} 
+     	while (ot!=l2.end()) 
+		{ 
+        	_new.push_back(*ot); 
+        	ot++; 
+    	} 
+    	return _new; 
+} 
+list<Node*> adjust(list<Node*> _heap) 
+{ 
+	if (_heap.size() <= 1) 
+        	return _heap; 
+    	list<Node*> new_heap; 
+    	list<Node*>::iterator it1, it2, it3; 
+    	it1 = it2 = it3 = _heap.begin(); 
+      	if (_heap.size() == 2)	{ 
+        	it2 = it1; 
+        	it2++; 
+        	it3 = _heap.end(); 
+    	} 
+    	else { 
+        	it2++; 
+        	it3 = it2; 
+        	it3++; 
+    	} 
+    	while (it1 != _heap.end()) 
+		{
+        	if (it2 == _heap.end()) 
+           		it1++; 
+         	else if ((*it1)->degree < (*it2)->degree) 
+			{ 
+            		it1++; 
+            		it2++; 
+            		if(it3!=_heap.end()) 
+                		it3++; 
+        	}
+        	else if (it3!=_heap.end() && (*it1)->degree == (*it2)->degree && (*it1)->degree == (*it3)->degree) 
+			{ 
+            		it1++; 
+            		it2++; 
+            		it3++; 
+        	} 
+        	else if ((*it1)->degree == (*it2)->degree) 
+			{ 
+            		Node *temp; 
+            		*it1 = mergetrees(*it1, *it2); 
+            		it2 = _heap.erase(it2); 
+            		if(it3 != _heap.end()) 
+                		it3++; 
+        	} 
+    	} 
+    	return _heap; 
+} 
+list<Node*> insertionoftree(list<Node*> _heap, Node *tree) 
+{
+	list<Node*> temp; 
+    	temp.push_back(tree);  
+    	temp = unionofheap(_heap,temp); 
+    	return adjust(temp); 
+} 
+list<Node*> removeminandreturnheap(Node *tree) 
+{ 
+    	list<Node*> heap; 
+    	Node *temp = tree->child; 
+    	Node *lo; 
+    	while (temp) { 
+        	lo = temp; 
+        	temp = temp->sibling; 
+        	lo->sibling = NULL; 
+        	heap.push_front(lo); 
+    	} 
+    	return heap; 
+} 
+list<Node*> insert(list<Node*> _head, int key) 
+{ 
+    	Node *temp = newNode(key); 
+    	return insertionoftree(_head, temp); 
+} 
+Node* getMin(list<Node*> _heap) 
+{ 
+    	list<Node*>::iterator it = _heap.begin(); 
+    	Node *temp = *it; 
+    	while (it != _heap.end()) 
+		{ 
+        	if ((*it)->data < temp->data) 
+            		temp = *it; 
+        	it++; 
+    	} 
+    	return temp; 
+}   
+list<Node*> extractMin(list<Node*> _heap) 
+{ 
+    	list<Node*> newheap, lo; 
+    	Node *temp; 
+    	temp = getMin(_heap); 
+    	list<Node*>::iterator it; 
+    	it = _heap.begin(); 
+    	while (it != _heap.end()) { 
+        	if (*it != temp) { 
+            		newheap.push_back(*it); 
+        	} 
+        	it++; 
+    	} 
+    	lo = removeminandreturnheap(temp); 
+    	newheap = unionofheap(newheap, lo); 
+    	newheap = adjust(newheap); 
+    	return newheap; 
+} 
+void printTree(Node *h) 
+{ 
+    	while (h) 
+		{ 
+        	cout << h->data << " "; 
+        	printTree(h->child); 
+        	h = h->sibling; 
+    	} 
+} 
+void printHeap(list<Node*> _heap) 
+{ 
+    	list<Node*> ::iterator it; 
+    	it = _heap.begin(); 
+    	while (it != _heap.end()) 
+		{ 
+        	printTree(*it); 
+        	it++; 
+    	}
+	cout<<endl; 
+} 
+int main() 
+{ 
+	int item, n; 
+    list<Node*> _heap; 
+	cout<<"Enter the number of elements to be inserted: ";
+	cin>>n;
+	cout<<"Enter the elements"<<endl;
+	for(int i=0; i<n; i++) 
+	{
+		cin>>item;
+		_heap = insert(_heap,item);
+	}
+	cout << "\nThe Binomial Heap after insertion:"<<endl; 
+	printHeap(_heap); 
+	Node *temp = getMin(_heap); 
+	cout << "\nThe minimum element of Binomial Heap: "<< temp->data <<endl; 
+	_heap = extractMin(_heap); 
+	cout << "\nThe Binomial Heap after extraction and deletion of the minimum element: "<<endl; 
+	printHeap(_heap); 
+	return 0; 
+} 
